@@ -12,7 +12,7 @@ class ApiService {
   /// Both machines need to be on the same Wi-Fi/network. Confirm Windows
   /// Firewall on the elikas-backend machine allows inbound connections on
   /// port 8000 too.
-  static const String baseUrl = 'http://10.233.51.141:8000/api/v1';
+  static const String baseUrl = 'https://e-likasligao.online/api/v1';
 
   Future<List<dynamic>> getEvacuationCenters() async {
     final response = await http.get(Uri.parse('$baseUrl/public/evacuation-centers'));
