@@ -1,30 +1,46 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:drift/native.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:elikas_mobile/database/database.dart';
 import 'package:elikas_mobile/main.dart';
+import 'package:elikas_mobile/providers/core_providers.dart';
+import 'package:elikas_mobile/providers/settings_providers.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App boots to the Home tab', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          // In-memory, same-isolate DB and a fake platform version --
+          // avoids the isolate-backed drift_flutter executor and the
+          // package_info_plus platform channel, neither available here.
+          appDatabaseProvider.overrideWithValue(AppDatabase.forTesting(NativeDatabase.memory())),
+          isOnlineProvider.overrideWith((ref) => Stream.value(true)),
+          packageInfoProvider.overrideWith(
+            (ref) async => PackageInfo(appName: 'E-LIKAS', packageName: 'com.example.elikas_mobile', version: '1.0.0', buildNumber: '1'),
+          ),
+        ],
+        child: const ElikasApp(),
+      ),
+    );
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('E-LIKAS'), findsOneWidget);
+    expect(find.text('Situation Overview'), findsOneWidget);
+
+    // Dispose the tree here (not in automatic teardown) so the drift
+    // package's zero-duration "mark stream closed" timer, scheduled on
+    // dispose, gets a chance to fire before the test framework's pending-
+    // timer check runs.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 1));
   });
 }

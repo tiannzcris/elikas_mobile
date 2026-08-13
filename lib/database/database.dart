@@ -67,6 +67,11 @@ class HazardAreas extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'elikas_cache'));
 
+  /// For widget tests -- takes any executor directly (e.g. an in-memory
+  /// one) instead of drift_flutter's isolate-backed file executor, which
+  /// needs platform channels the test environment doesn't provide.
+  AppDatabase.forTesting(super.executor);
+
   @override
   int get schemaVersion => 1;
 }
