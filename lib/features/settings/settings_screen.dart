@@ -10,6 +10,7 @@ import '../staff/evacuation_center_form/evacuation_center_form_screen.dart';
 import '../staff/family_registration/family_registration_screen.dart';
 import '../staff/my_evacuation_centers/my_evacuation_centers_screen.dart';
 import '../staff/pending_registrations/pending_registrations_screen.dart';
+import '../staff/staff_dashboard/staff_dashboard_screen.dart';
 import '../staff/staff_login_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -136,6 +137,16 @@ class SettingsScreen extends ConsumerWidget {
                               if (authState.session!.role != null) authState.session!.role!,
                               if (authState.session!.barangay != null) 'Brgy. ${authState.session!.barangay}',
                             ].join(' · '),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.dashboard_outlined,
+                            title: 'Staff Dashboard',
+                            subtitle: 'Every staff feature, in one place',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const StaffDashboardScreen()),
+                            ),
+                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
                           ),
                           const Divider(height: 1),
                           _Row(
