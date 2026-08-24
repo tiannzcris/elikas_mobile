@@ -3,13 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/date_format.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/core_providers.dart';
-import '../../providers/registration_providers.dart';
 import '../../providers/settings_providers.dart';
-import '../staff/all_evacuees/all_evacuees_screen.dart';
-import '../staff/evacuation_center_form/evacuation_center_form_screen.dart';
-import '../staff/family_registration/family_registration_screen.dart';
-import '../staff/my_evacuation_centers/my_evacuation_centers_screen.dart';
-import '../staff/pending_registrations/pending_registrations_screen.dart';
 import '../staff/staff_dashboard/staff_dashboard_screen.dart';
 import '../staff/staff_login_screen.dart';
 
@@ -27,8 +21,6 @@ class SettingsScreen extends ConsumerWidget {
     final notificationsEnabled = ref.watch(notificationsPrefProvider);
     final packageInfo = ref.watch(packageInfoProvider);
     final authState = ref.watch(staffAuthProvider);
-    final pendingCount =
-        ref.watch(pendingRegistrationsProvider).asData?.value.where((r) => !r.synced).length ?? 0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -142,71 +134,11 @@ class SettingsScreen extends ConsumerWidget {
                           _Row(
                             icon: Icons.dashboard_outlined,
                             title: 'Staff Dashboard',
-                            subtitle: 'Every staff feature, in one place',
+                            subtitle: 'Register families, evacuees, centers, and more',
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(builder: (_) => const StaffDashboardScreen()),
                             ),
                             trailingWidget: const Icon(Icons.chevron_right, size: 18),
-                          ),
-                          const Divider(height: 1),
-                          _Row(
-                            icon: Icons.person_add_alt_outlined,
-                            title: 'Register a Family',
-                            subtitle: 'Works offline -- syncs when online',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const FamilyRegistrationScreen()),
-                            ),
-                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
-                          ),
-                          const Divider(height: 1),
-                          _Row(
-                            icon: Icons.pending_actions_outlined,
-                            title: 'My Pending Registrations',
-                            subtitle: pendingCount == 0
-                                ? 'Nothing queued'
-                                : '$pendingCount not yet synced',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const PendingRegistrationsScreen()),
-                            ),
-                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
-                          ),
-                          const Divider(height: 1),
-                          _Row(
-                            icon: Icons.groups_outlined,
-                            title: 'All Evacuees',
-                            subtitle: 'Browse registered families',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const AllEvacueesScreen()),
-                            ),
-                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
-                          ),
-                          const Divider(height: 1),
-                          _Row(
-                            icon: Icons.add_home_work_outlined,
-                            title: 'Add Evacuation Center',
-                            subtitle: 'Online only -- not queued offline',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const EvacuationCenterFormScreen()),
-                            ),
-                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
-                          ),
-                          const Divider(height: 1),
-                          _Row(
-                            icon: Icons.holiday_village_outlined,
-                            title: 'My Evacuation Centers',
-                            subtitle: 'View and edit centers you can manage',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const MyEvacuationCentersScreen()),
-                            ),
-                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
-                          ),
-                          const Divider(height: 1),
-                          _Row(
-                            icon: Icons.logout,
-                            iconColor: Colors.red,
-                            titleColor: Colors.red,
-                            title: 'Staff Logout',
-                            onTap: () => ref.read(staffAuthProvider.notifier).logout(),
                           ),
                         ],
                       )
