@@ -8,6 +8,7 @@ import '../../providers/settings_providers.dart';
 import '../staff/all_evacuees/all_evacuees_screen.dart';
 import '../staff/evacuation_center_form/evacuation_center_form_screen.dart';
 import '../staff/family_registration/family_registration_screen.dart';
+import '../staff/my_evacuation_centers/my_evacuation_centers_screen.dart';
 import '../staff/pending_registrations/pending_registrations_screen.dart';
 import '../staff/staff_login_screen.dart';
 
@@ -175,6 +176,16 @@ class SettingsScreen extends ConsumerWidget {
                             subtitle: 'Online only -- not queued offline',
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(builder: (_) => const EvacuationCenterFormScreen()),
+                            ),
+                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.holiday_village_outlined,
+                            title: 'My Evacuation Centers',
+                            subtitle: 'View and edit centers you can manage',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const MyEvacuationCentersScreen()),
                             ),
                             trailingWidget: const Icon(Icons.chevron_right, size: 18),
                           ),

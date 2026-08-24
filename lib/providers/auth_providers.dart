@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import 'core_providers.dart';
 
 const _tokenKey = 'staff_auth_token';
+const _userIdKey = 'staff_auth_user_id';
 const _nameKey = 'staff_auth_name';
 const _roleKey = 'staff_auth_role';
 const _barangayKey = 'staff_auth_barangay';
@@ -14,11 +15,12 @@ final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
 
 class StaffSession {
   final String token;
+  final int? userId;
   final String? name;
   final String? role;
   final String? barangay;
 
-  const StaffSession({required this.token, this.name, this.role, this.barangay});
+  const StaffSession({required this.token, this.userId, this.name, this.role, this.barangay});
 }
 
 class StaffAuthState {
@@ -70,12 +72,19 @@ class StaffAuthNotifier extends StateNotifier<StaffAuthState> {
       state = state.copyWith(checkingStoredSession: false);
       return;
     }
+    final userIdStr = await _storage.read(key: _userIdKey);
     final name = await _storage.read(key: _nameKey);
     final role = await _storage.read(key: _roleKey);
     final barangay = await _storage.read(key: _barangayKey);
     state = state.copyWith(
       checkingStoredSession: false,
-      session: StaffSession(token: token, name: name, role: role, barangay: barangay),
+      session: StaffSession(
+        token: token,
+        userId: userIdStr != null ? int.tryParse(userIdStr) : null,
+        name: name,
+        role: role,
+        barangay: barangay,
+      ),
     );
   }
 
@@ -85,11 +94,13 @@ class StaffAuthNotifier extends StateNotifier<StaffAuthState> {
       final result = await _api.login(email, password);
       final session = StaffSession(
         token: result['token'] as String,
+        userId: result['userId'] as int?,
         name: result['name'] as String?,
         role: result['role'] as String?,
         barangay: result['barangay'] as String?,
       );
       await _storage.write(key: _tokenKey, value: session.token);
+      if (session.userId != null) await _storage.write(key: _userIdKey, value: '${session.userId}');
       if (session.name != null) await _storage.write(key: _nameKey, value: session.name);
       if (session.role != null) await _storage.write(key: _roleKey, value: session.role);
       if (session.barangay != null) await _storage.write(key: _barangayKey, value: session.barangay);
@@ -103,6 +114,7 @@ class StaffAuthNotifier extends StateNotifier<StaffAuthState> {
 
   Future<void> logout() async {
     await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _userIdKey);
     await _storage.delete(key: _nameKey);
     await _storage.delete(key: _roleKey);
     await _storage.delete(key: _barangayKey);

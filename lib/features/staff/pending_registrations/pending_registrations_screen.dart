@@ -25,6 +25,35 @@ class _PendingRegistrationsScreenState extends ConsumerState<PendingRegistration
     await ref.read(pendingRegistrationsSyncProvider.notifier).pushNow(token);
   }
 
+  /// The AppBar sync button confirms first -- an accidental tap there
+  /// shouldn't silently submit registrations staff may still want to
+  /// review/edit. Pull-to-refresh is left unconfirmed since that's
+  /// already a deliberate gesture, not an easy misfire.
+  Future<void> _confirmAndSync() async {
+    final unsyncedCount =
+        ref.read(pendingRegistrationsProvider).asData?.value.where((r) => !r.synced).length ?? 0;
+    if (unsyncedCount == 0) {
+      await _syncNow();
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sync now?'),
+        content: Text(
+          'This will submit $unsyncedCount not-yet-synced registration${unsyncedCount == 1 ? '' : 's'} to the server. '
+          'Once synced, they can no longer be edited here.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Not yet')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Sync')),
+        ],
+      ),
+    );
+    if (confirmed == true) await _syncNow();
+  }
+
   Future<void> _confirmDelete(PendingRegistration row) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -64,7 +93,7 @@ class _PendingRegistrationsScreenState extends ConsumerState<PendingRegistration
             icon: syncState.status == PushSyncStatus.syncing
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.sync),
-            onPressed: syncState.status == PushSyncStatus.syncing ? null : () => _syncNow(),
+            onPressed: syncState.status == PushSyncStatus.syncing ? null : () => _confirmAndSync(),
           ),
         ],
       ),

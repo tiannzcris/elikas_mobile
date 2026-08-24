@@ -122,10 +122,24 @@ class ApiService {
     final user = (data['user'] as Map<String, dynamic>?) ?? (body['user'] as Map<String, dynamic>?);
     return {
       'token': token as String,
+      'userId': user?['id'] as int?,
       'name': _extractLabel(user?['name']),
       'role': _extractLabel(user?['role']),
       'barangay': _extractLabel(user?['barangay']),
     };
+  }
+
+  /// Staff-authenticated list -- NOT the same as the public
+  /// /public/evacuation-centers endpoint this app also calls. This one
+  /// (confirmed to exist alongside the create/update endpoints at the
+  /// same non-public path) returns the richer EvacuationCenterResource
+  /// with creator info loaded, which "My Evacuation Centers" needs to
+  /// filter by created_by. Shape not verified live yet -- parsed
+  /// defensively, same pattern as every other endpoint here.
+  Future<List<dynamic>> getMyEvacuationCenters(String token) async {
+    final response = await http.get(Uri.parse('$baseUrl/evacuation-centers'), headers: _authHeaders(token));
+    _throwIfNotOk(response, 'evacuation centers');
+    return _extractList(jsonDecode(response.body));
   }
 
   /// Barangays for the registration form's dropdown -- real backend data
