@@ -122,15 +122,23 @@ class _GisMapScreenState extends ConsumerState<GisMapScreen> {
     final hazards = hazardsAsync.asData?.value ?? const <HazardArea>[];
     final hazardTypes = hazards.map((h) => h.hazardType).toSet().toList();
 
+    // The backend now allows centers with no location set (created without
+    // the optional map picker) -- these can't be plotted, so every
+    // map-placement/distance calculation below works off this filtered
+    // list rather than the raw `centers`.
+    final mappableCenters = centers.where((c) => c.latitude != null && c.longitude != null).toList();
+
     final initialCenter = _userPosition != null
         ? LatLng(_userPosition!.latitude, _userPosition!.longitude)
-        : (centers.isNotEmpty ? LatLng(centers.first.latitude, centers.first.longitude) : _fallbackCenter);
+        : (mappableCenters.isNotEmpty
+            ? LatLng(mappableCenters.first.latitude!, mappableCenters.first.longitude!)
+            : _fallbackCenter);
 
     EvacuationCenter? nearest;
     double? nearestDistance;
-    if (_userPosition != null && centers.isNotEmpty) {
-      for (final c in centers) {
-        final d = distanceKm(_userPosition!.latitude, _userPosition!.longitude, c.latitude, c.longitude);
+    if (_userPosition != null && mappableCenters.isNotEmpty) {
+      for (final c in mappableCenters) {
+        final d = distanceKm(_userPosition!.latitude, _userPosition!.longitude, c.latitude!, c.longitude!);
         if (nearestDistance == null || d < nearestDistance) {
           nearestDistance = d;
           nearest = c;
@@ -168,6 +176,24 @@ class _GisMapScreenState extends ConsumerState<GisMapScreen> {
                 ],
               ),
             ),
+          if (centers.length > mappableCenters.length)
+            Container(
+              width: double.infinity,
+              color: Colors.amber.shade50,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(Icons.location_off_outlined, color: Colors.amber.shade800, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${centers.length - mappableCenters.length} center(s) without a map location aren\'t shown here.',
+                      style: const TextStyle(fontSize: 11.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: Stack(
               children: [
@@ -192,9 +218,9 @@ class _GisMapScreenState extends ConsumerState<GisMapScreen> {
                       ]),
                     if (showCenters)
                       MarkerLayer(markers: [
-                        for (final c in centers)
+                        for (final c in mappableCenters)
                           Marker(
-                            point: LatLng(c.latitude, c.longitude),
+                            point: LatLng(c.latitude!, c.longitude!),
                             width: 36,
                             height: 36,
                             child: GestureDetector(

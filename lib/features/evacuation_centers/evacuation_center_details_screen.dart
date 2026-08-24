@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/center_status.dart';
 import '../../core/geo.dart';
 import '../../database/database.dart';
+import '../../providers/auth_providers.dart';
+import '../staff/evacuation_center_form/evacuation_center_form_screen.dart';
 
 /// Deliberately omits a Facilities section and Contact Information --
 /// verified against the live /public/evacuation-centers response, neither
 /// facilities nor a contact person/phone are actually returned by the
 /// backend today (no per-center detail endpoint exists either), so this
 /// doesn't invent fields the API doesn't send.
-class EvacuationCenterDetailsScreen extends StatelessWidget {
+class EvacuationCenterDetailsScreen extends ConsumerWidget {
   final EvacuationCenter center;
   final double? userLatitude;
   final double? userLongitude;
@@ -22,14 +25,28 @@ class EvacuationCenterDetailsScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = centerStatusColor(center.status);
-    final distance = (userLatitude != null && userLongitude != null)
-        ? distanceKm(userLatitude!, userLongitude!, center.latitude, center.longitude)
+    final hasLocation = center.latitude != null && center.longitude != null;
+    final distance = (userLatitude != null && userLongitude != null && hasLocation)
+        ? distanceKm(userLatitude!, userLongitude!, center.latitude!, center.longitude!)
         : null;
+    final isStaffLoggedIn = ref.watch(staffAuthProvider).isLoggedIn;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Evacuation Center Details')),
+      appBar: AppBar(
+        title: const Text('Evacuation Center Details'),
+        actions: [
+          if (isStaffLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit (only works if you created this center)',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => EvacuationCenterFormScreen(existing: center)),
+              ),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -87,19 +104,35 @@ class EvacuationCenterDetailsScreen extends StatelessWidget {
           _DetailRow(label: 'Type', value: center.type),
           _DetailRow(label: 'Address', value: center.address),
           if (center.barangay != null) _DetailRow(label: 'Barangay', value: center.barangay!),
-          _DetailRow(label: 'Coordinates', value: '${center.latitude.toStringAsFixed(5)}, ${center.longitude.toStringAsFixed(5)}'),
+          if (hasLocation)
+            _DetailRow(label: 'Coordinates', value: '${center.latitude!.toStringAsFixed(5)}, ${center.longitude!.toStringAsFixed(5)}'),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _openDirections(center.latitude, center.longitude),
-                  icon: const Icon(Icons.directions_outlined),
-                  label: const Text('Get Directions'),
+          if (hasLocation)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openDirections(center.latitude!, center.longitude!),
+                    icon: const Icon(Icons.directions_outlined),
+                    label: const Text('Get Directions'),
+                  ),
                 ),
+              ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                children: [
+                  Icon(Icons.location_off_outlined, size: 18, color: Colors.amber.shade800),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text('No map location set for this center yet.', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),

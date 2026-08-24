@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/date_format.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/core_providers.dart';
+import '../../providers/registration_providers.dart';
 import '../../providers/settings_providers.dart';
+import '../staff/all_evacuees/all_evacuees_screen.dart';
+import '../staff/evacuation_center_form/evacuation_center_form_screen.dart';
+import '../staff/family_registration/family_registration_screen.dart';
+import '../staff/pending_registrations/pending_registrations_screen.dart';
+import '../staff/staff_login_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -17,6 +24,9 @@ class SettingsScreen extends ConsumerWidget {
     final totalRecords = centersCount + alertsCount + hazardsCount;
     final notificationsEnabled = ref.watch(notificationsPrefProvider);
     final packageInfo = ref.watch(packageInfoProvider);
+    final authState = ref.watch(staffAuthProvider);
+    final pendingCount =
+        ref.watch(pendingRegistrationsProvider).asData?.value.where((r) => !r.synced).length ?? 0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -106,6 +116,87 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'Version ${info.version} (Build ${info.buildNumber})',
               ),
             ),
+          ),
+          const SizedBox(height: 20),
+          _SectionLabel('STAFF'),
+          _Card(
+            child: authState.checkingStoredSession
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                  )
+                : authState.isLoggedIn
+                    ? Column(
+                        children: [
+                          _Row(
+                            icon: Icons.badge_outlined,
+                            title: authState.session!.name ?? 'Logged in',
+                            subtitle: [
+                              if (authState.session!.role != null) authState.session!.role!,
+                              if (authState.session!.barangay != null) 'Brgy. ${authState.session!.barangay}',
+                            ].join(' · '),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.person_add_alt_outlined,
+                            title: 'Register a Family',
+                            subtitle: 'Works offline -- syncs when online',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const FamilyRegistrationScreen()),
+                            ),
+                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.pending_actions_outlined,
+                            title: 'My Pending Registrations',
+                            subtitle: pendingCount == 0
+                                ? 'Nothing queued'
+                                : '$pendingCount not yet synced',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const PendingRegistrationsScreen()),
+                            ),
+                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.groups_outlined,
+                            title: 'All Evacuees',
+                            subtitle: 'Browse registered families',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AllEvacueesScreen()),
+                            ),
+                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.add_home_work_outlined,
+                            title: 'Add Evacuation Center',
+                            subtitle: 'Online only -- not queued offline',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const EvacuationCenterFormScreen()),
+                            ),
+                            trailingWidget: const Icon(Icons.chevron_right, size: 18),
+                          ),
+                          const Divider(height: 1),
+                          _Row(
+                            icon: Icons.logout,
+                            iconColor: Colors.red,
+                            titleColor: Colors.red,
+                            title: 'Staff Logout',
+                            onTap: () => ref.read(staffAuthProvider.notifier).logout(),
+                          ),
+                        ],
+                      )
+                    : _Row(
+                        icon: Icons.badge_outlined,
+                        title: 'Staff Login',
+                        subtitle: 'For barangay officials and E-LIKAS staff',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const StaffLoginScreen()),
+                        ),
+                        trailingWidget: const Icon(Icons.chevron_right, size: 18),
+                      ),
           ),
         ],
       ),
