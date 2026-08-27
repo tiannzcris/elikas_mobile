@@ -48,8 +48,6 @@ dependencies:
   package_info_plus: ^10.2.1
   flutter_secure_storage: 10.0.0
   image_picker: ^1.2.3
- 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -101,7 +99,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/logo.png
     - assets/images/background.png
     - assets/images/logo_badge_transparent.png
 

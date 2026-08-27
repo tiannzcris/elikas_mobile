@@ -75,10 +75,12 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.white,
-            backgroundImage: AssetImage('assets/images/logo.png'),
+          Container(
+            width: 48,
+            height: 48,
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: Image.asset('assets/images/logo_badge_transparent.png', fit: BoxFit.contain),
           ),
           const SizedBox(width: 12),
           const Expanded(
