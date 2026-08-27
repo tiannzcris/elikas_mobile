@@ -33,6 +33,12 @@ void main() {
     );
     await tester.pump();
 
+    // The splash screen shows briefly (Future.delayed) before handing off
+    // to the app shell via pushReplacement -- pumpAndSettle rides out
+    // both that delay and the resulting page-transition animation, so
+    // the splash route is actually gone before we assert on Home's text.
+    await tester.pumpAndSettle(const Duration(milliseconds: 100), EnginePhase.sendSemanticsUpdate, const Duration(seconds: 5));
+
     expect(find.text('E-LIKAS'), findsOneWidget);
     expect(find.text('Situation Overview'), findsOneWidget);
 
