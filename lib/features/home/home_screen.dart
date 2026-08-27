@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../database/database.dart';
 import '../../providers/core_providers.dart';
+import '../../theme/app_theme.dart';
 import '../alerts/alert_details_screen.dart';
+
+/// Shared soft shadow used across this screen's cards -- consistent depth
+/// instead of every section inventing its own elevation.
+const _cardShadow = [
+  BoxShadow(color: Color(0x14000000), blurRadius: 14, offset: Offset(0, 4)),
+];
 
 /// Resident-facing Home tab. Every number on this screen is derived from
 /// the real cached /public/evacuation-centers and /public/alerts data --
@@ -64,14 +71,15 @@ class _Header extends StatelessWidget {
     final alertCount = alertsAsync.asData?.value.length ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0D2A5C), Color(0xFF13407A)],
+          colors: [AppColors.navy, Color(0xFF16467F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: AppColors.navy.withValues(alpha: 0.28), blurRadius: 18, offset: const Offset(0, 8))],
       ),
       child: Row(
         children: [
@@ -102,7 +110,7 @@ class _Header extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: const Icon(Icons.notifications_outlined, color: Color(0xFF0D2A5C), size: 20),
+                child: const Icon(Icons.notifications_outlined, color: AppColors.navy, size: 20),
               ),
               if (alertCount > 0)
                 Positioned(
@@ -139,8 +147,9 @@ class _OfflineBanner extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.blue.shade100),
+        boxShadow: _cardShadow,
       ),
       child: Row(
         children: [
@@ -234,34 +243,43 @@ class _BannerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: color.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color.shade700),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: TextStyle(
-                          color: color.shade900, fontWeight: FontWeight.w600, fontSize: 14)),
-                  if (subtitle.isNotEmpty)
-                    Text(subtitle, style: TextStyle(color: color.shade800, fontSize: 12)),
-                ],
+    return Material(
+      color: color.shade50,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.shade100),
+            boxShadow: [BoxShadow(color: color.shade900.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: Icon(icon, color: color.shade700, size: 20),
               ),
-            ),
-            if (onTap != null) Icon(Icons.chevron_right, color: color.shade700),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                            color: color.shade900, fontWeight: FontWeight.w700, fontSize: 14)),
+                    if (subtitle.isNotEmpty)
+                      Text(subtitle, style: TextStyle(color: color.shade800, fontSize: 12)),
+                  ],
+                ),
+              ),
+              if (onTap != null) Icon(Icons.chevron_right, color: color.shade700),
+            ],
+          ),
         ),
       ),
     );
@@ -279,12 +297,18 @@ class _WeatherPlaceholderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: _cardShadow,
       ),
       child: Row(
         children: [
-          Icon(Icons.cloud_outlined, color: Colors.grey.shade600, size: 28),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.cloud_outlined, color: Colors.grey.shade600, size: 22),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -386,16 +410,22 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.shade50,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: _cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color.shade700, size: 20),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color.shade700, size: 18),
+          ),
+          const SizedBox(height: 10),
           Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color.shade900)),
-          Text(label, style: TextStyle(fontSize: 11, color: color.shade800)),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
         ],
       ),
     );
@@ -462,7 +492,7 @@ class _AlertTile extends StatelessWidget {
     };
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => AlertDetailsScreen(alert: alert)),
       ),
@@ -471,8 +501,9 @@ class _AlertTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
+        boxShadow: _cardShadow,
       ),
       child: Row(
         children: [
@@ -524,7 +555,7 @@ class _SyncCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
